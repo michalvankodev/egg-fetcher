@@ -15,6 +15,7 @@ fn spawn_camera(commands: &mut Commands) {
 }
 
 pub fn spawn(commands: &mut Commands, fonts: &Fonts) {
+    // TODO change fonts Fredoka One to match the assets style
     let font = &fonts.dogica;
     let button_size = Size::new(Val::Px(400.0), Val::Px(50.0));
 
@@ -24,8 +25,8 @@ pub fn spawn(commands: &mut Commands, fonts: &Fonts) {
     let mut actions = Housing::percent(100.0, 90.0);
     let footer = Housing::percent(100.0, 10.0);
 
-    let title = EmbossedText::big("Rusty Jam\n\nBevy Template", font);
-    let notice = SimpleText::small("Created by septum | https://septum.io", font);
+    let title = EmbossedText::big("Rusty Jam\n\nEgg fetcher", font);
+    let notice = SimpleText::small("Created by @silen-z and @michalvankodev", font);
     let play = Action::new("Play", font, button_size);
     let quit = Action::new("Quit", font, button_size);
 

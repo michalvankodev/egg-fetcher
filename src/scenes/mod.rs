@@ -1,5 +1,6 @@
 mod loading;
 mod title;
+mod play;
 
 use bevy::prelude::{Plugin as BevyPlugin, *};
 
