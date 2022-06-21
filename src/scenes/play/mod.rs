@@ -59,7 +59,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
     }
 }
 
-const PLAYER_SPEED: f32 = 250.;
+const PLAYER_SPEED: f32 = 350.;
 
 fn handle_input(
     keys: Res<Input<KeyCode>>,
@@ -96,6 +96,21 @@ fn chicken_movement(
     player: Query<&Transform, With<Player>>,
     time: Res<Time>,
 ) {
+
+    let mut chicken_combinations = chickens.iter_combinations_mut();
+    while let Some([mut c1, mut c2]) = chicken_combinations.fetch_next() {
+        let distance_in_between = c1.translation.distance_squared(c2.translation); 
+        
+        if distance_in_between < MINIMAL_DISTANCE {
+            let c1_direction = (c1.translation - c2.translation).normalize();
+            let c2_direction = - c1_direction;
+            
+            c1.translation += c1_direction * time.delta_seconds() * CHICKEN_SPEED;
+            c2.translation += c2_direction * time.delta_seconds() * CHICKEN_SPEED;
+        }
+        
+    }
+
     let player_transform = player.single();
     for mut chicken_transform in chickens.iter_mut() {
         let distance_to_player = chicken_transform
