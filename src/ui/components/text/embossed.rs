@@ -69,8 +69,8 @@ impl Embossed {
         background_section.style.font = font.clone();
         background_section.style.font_size = BIG_SIZE;
 
-        embossed.background.style.position.top = Val::Px(4.0);
-        embossed.background.style.position.left = Val::Px(4.0);
+        embossed.background.style.position.top = Val::Px(2.0);
+        embossed.background.style.position.left = Val::Px(2.0);
 
         embossed
     }
