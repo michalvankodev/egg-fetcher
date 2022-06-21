@@ -4,9 +4,9 @@ pub struct Colors;
 
 impl Colors {
     pub const PRIMARY: Color = Color::Rgba {
-        red: 63.0 / u8::MAX as f32,
-        green: 91.0 / u8::MAX as f32,
-        blue: 126.0 / u8::MAX as f32,
+        red: 255.0 / u8::MAX as f32,
+        green: 33.0 / u8::MAX as f32,
+        blue: 33.0 / u8::MAX as f32,
         alpha: 1.0,
     };
     pub const LIGHT: Color = Color::Rgba {

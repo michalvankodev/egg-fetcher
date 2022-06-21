@@ -15,8 +15,7 @@ fn spawn_camera(commands: &mut Commands) {
 }
 
 pub fn spawn(commands: &mut Commands, fonts: &Fonts) {
-    // TODO change fonts Fredoka One to match the assets style
-    let font = &fonts.dogica;
+    let font = &fonts.fredoka;
     let button_size = Size::new(Val::Px(400.0), Val::Px(50.0));
 
     let overlay = Overlay::new();
