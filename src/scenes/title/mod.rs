@@ -34,6 +34,7 @@ fn buttons_interactions(
         (&ActionMarker, &Interaction, &mut UiColor),
         (Changed<Interaction>, With<Button>),
     >,
+    mut app_state: ResMut<State<game::State>>,
 ) {
     for (action, interaction, mut color) in query.iter_mut() {
         match interaction {
@@ -44,7 +45,7 @@ fn buttons_interactions(
 
                 match action.kind() {
                     ActionKind::Play => {
-                        todo!();
+                      app_state.set(game::State::Play).unwrap();
                     }
                     ActionKind::Quit => {
                         exit_event.send(AppExit);
