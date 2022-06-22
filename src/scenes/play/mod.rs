@@ -3,6 +3,8 @@ use std::f32::consts::TAU;
 use crate::game;
 use bevy::prelude::{Plugin as BevyPlugin, *};
 
+mod maps;
+
 #[derive(Component)]
 struct GameplayObject;
 
@@ -16,7 +18,8 @@ impl BevyPlugin for Plugin {
                     .with_system(handle_input)
                     .with_system(chicken_movement),
             )
-            .add_system_set(SystemSet::on_exit(game::State::Play).with_system(cleanup));
+            .add_system_set(SystemSet::on_exit(game::State::Play).with_system(cleanup)).
+        add_plugin(maps::Plugin);
     }
 }
 
@@ -39,6 +42,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
     commands
         .spawn_bundle(SpriteBundle {
             texture: assets.load("player.png"),
+            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
             ..default()
         })
         .insert(Player)
@@ -51,7 +55,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
         commands
             .spawn_bundle(SpriteBundle {
                 texture: assets.load("Chick_Down.png"),
-                transform: Transform::from_translation(dir * Vec3::new(100.0, 0., 0.)),
+                transform: Transform::from_translation(dir * Vec3::new(100.0, 0., 1.)),
                 ..default()
             })
             .insert(Chicken)
