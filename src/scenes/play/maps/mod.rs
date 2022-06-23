@@ -1,7 +1,7 @@
-use bevy::prelude::{Plugin as BevyPlugin, *};
 use crate::game;
+use bevy::prelude::{Plugin as BevyPlugin, *};
 
-use super::{Player, GameplayObject, Chicken, CHICKEN_EGG_COOLDOWN};
+use super::{Chicken, GameplayObject, Player, CHICKEN_EGG_COOLDOWN};
 
 #[derive(Clone)]
 enum MapObject {
@@ -18,7 +18,7 @@ struct MapDefinition {
     map_objects: Vec<Vec<MapObject>>,
 }
 
-/** 
+/**
  * Square system
 * 1 square has widht 128px and height of 64px (there is a left over of 32px of "ground" on the
 *   sprite)
@@ -31,14 +31,36 @@ const TILE_HEIGHT: usize = 64;
 
 impl MapDefinition {
     fn new() -> MapDefinition {
-        let map_objects_row: Vec<MapObject> = vec![MapObject::Plain, MapObject::Plain, MapObject::Plain, MapObject::Plain, MapObject::Plain, MapObject::Plain, MapObject::Hole, MapObject::Plain, MapObject::Hole, MapObject::Plain, MapObject::Plain, MapObject::Plain];
+        let map_objects_row: Vec<MapObject> = vec![
+            MapObject::Plain,
+            MapObject::Plain,
+            MapObject::Plain,
+            MapObject::Plain,
+            MapObject::Plain,
+            MapObject::Plain,
+            MapObject::Hole,
+            MapObject::Plain,
+            MapObject::Hole,
+            MapObject::Plain,
+            MapObject::Plain,
+            MapObject::Plain,
+        ];
 
         MapDefinition {
             width: 12,
             height: 8,
             player_spawn: (1, 1),
-            chicken_spawns: vec![(0,0), (0,1), (3,3), (4,4), (5,5)],
-            map_objects: vec![map_objects_row.clone(), map_objects_row.clone(), map_objects_row.clone(), map_objects_row.clone(), map_objects_row.clone(), map_objects_row.clone(), map_objects_row.clone(),  map_objects_row.clone()]
+            chicken_spawns: vec![(0, 0), (0, 1), (3, 3), (4, 4), (5, 5)],
+            map_objects: vec![
+                map_objects_row.clone(),
+                map_objects_row.clone(),
+                map_objects_row.clone(),
+                map_objects_row.clone(),
+                map_objects_row.clone(),
+                map_objects_row.clone(),
+                map_objects_row.clone(),
+                map_objects_row.clone(),
+            ],
         }
     }
 }
@@ -58,14 +80,17 @@ fn get_vector_for_tile(x: usize, y: usize, z: f32) -> Vec3 {
     return multiplier * vector;
 }
 
-
 fn setup(mut commands: Commands, assets: Res<AssetServer>) {
     let map_def = MapDefinition::new();
     for tile_point_x in 0..map_def.width {
         for tile_point_y in 0..map_def.height {
             commands.spawn_bundle(SpriteBundle {
                 texture: assets.load("sprites/Terrain_Flat/Grass_Dark.png"),
-               transform: Transform::from_translation(get_vector_for_tile(tile_point_x, tile_point_y, 0.01)),
+                transform: Transform::from_translation(get_vector_for_tile(
+                    tile_point_x,
+                    tile_point_y,
+                    0.01,
+                )),
                 sprite: Sprite {
                     anchor: bevy::sprite::Anchor::Center,
                     ..default()
@@ -77,7 +102,11 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
                 Some(MapObject::Hole) => {
                     commands.spawn_bundle(SpriteBundle {
                         texture: assets.load("sprites/Objects/Hole.png"),
-                        transform: Transform::from_translation(get_vector_for_tile(tile_point_x, tile_point_y, 0.1)),
+                        transform: Transform::from_translation(get_vector_for_tile(
+                            tile_point_x,
+                            tile_point_y,
+                            0.1,
+                        )),
                         ..default()
                     });
                 }
@@ -90,7 +119,11 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
     commands
         .spawn_bundle(SpriteBundle {
             texture: assets.load("player.png"),
-            transform: Transform::from_translation(get_vector_for_tile(map_def.player_spawn.0, map_def.player_spawn.1, 1.)),
+            transform: Transform::from_translation(get_vector_for_tile(
+                map_def.player_spawn.0,
+                map_def.player_spawn.1,
+                1.,
+            )),
             ..default()
         })
         .insert(Player)
@@ -101,7 +134,11 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
         commands
             .spawn_bundle(SpriteBundle {
                 texture: assets.load("Chick_Down.png"),
-                transform: Transform::from_translation(get_vector_for_tile(chicken_spawn.0, chicken_spawn.1, 1.)),
+                transform: Transform::from_translation(get_vector_for_tile(
+                    chicken_spawn.0,
+                    chicken_spawn.1,
+                    1.,
+                )),
                 ..default()
             })
             .insert(Chicken {
@@ -109,8 +146,6 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
             })
             .insert(GameplayObject);
     }
-    
 }
-
 
 fn cleanup() {}
