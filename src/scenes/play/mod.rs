@@ -1,4 +1,4 @@
-use std::{f32::consts::TAU, time::Duration};
+use std::time::Duration;
 
 use crate::game;
 use bevy::prelude::{Plugin as BevyPlugin, *};
@@ -13,8 +13,7 @@ pub struct Plugin;
 
 impl BevyPlugin for Plugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_plugin(maps::Plugin)
+        app.add_plugin(maps::Plugin)
             .add_system_set(SystemSet::on_enter(game::State::Play).with_system(setup))
             .add_system_set(
                 SystemSet::on_in_stack_update(game::State::Play)
@@ -22,7 +21,8 @@ impl BevyPlugin for Plugin {
                     .with_system(chickens_lay_eggs)
                     .with_system(player_pickups_eggs)
                     .with_system(despawn_timers)
-                    .with_system(chicken_movement),
+                    .with_system(chicken_movement)
+                    .with_system(camera_follow_player),
             )
             .add_system_set(SystemSet::on_exit(game::State::Play).with_system(cleanup));
     }
@@ -178,6 +178,24 @@ fn despawn_timers(
             commands.entity(entity).despawn_recursive()
         }
     }
+}
+
+fn camera_follow_player(
+    mut transforms: ParamSet<(
+        Query<&Transform, With<Player>>,
+        Query<&mut Transform, With<MainCamera>>,
+    )>,
+) {
+    let player_transform_query = transforms.p0();
+    let player_translation = player_transform_query.single().translation;
+
+    let mut camera_transform_query = transforms.p1();
+    let mut camera_transform = camera_transform_query.single_mut();
+    *camera_transform = Transform::from_translation(Vec3::new(
+        player_translation.x,
+        player_translation.y,
+        camera_transform.translation.z,
+    ));
 }
 
 fn cleanup(mut commands: Commands, entities: Query<Entity, With<GameplayObject>>) {
