@@ -1275,6 +1275,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_kira_audio",
+ "rand",
 ]
 
 [[package]]
