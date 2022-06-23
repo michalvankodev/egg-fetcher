@@ -27,7 +27,7 @@ struct MapDefinition {
  */
 
 const TILE_WIDTH: usize = 128;
-const TILE_HEIGHT: usize = 64;
+const TILE_HEIGHT: usize = 63;
 
 impl MapDefinition {
     fn new() -> MapDefinition {
@@ -89,7 +89,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
                 transform: Transform::from_translation(get_vector_for_tile(
                     tile_point_x,
                     tile_point_y,
-                    0.01,
+                    0.0001 * (tile_point_x as f32) + 0.000_001 * (tile_point_y as f32),
                 )),
                 sprite: Sprite {
                     anchor: bevy::sprite::Anchor::Center,
