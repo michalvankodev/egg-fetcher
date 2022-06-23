@@ -22,6 +22,7 @@ impl BevyPlugin for Plugin {
                     .with_system(player_pickups_eggs)
                     .with_system(despawn_timers)
                     .with_system(chicken_movement)
+                    .with_system(pet_movement)
                     .with_system(camera_follow_player),
             )
             .add_system_set(SystemSet::on_exit(game::State::Play).with_system(cleanup));
@@ -33,6 +34,9 @@ struct MainCamera;
 
 #[derive(Component)]
 struct Player;
+
+#[derive(Component)]
+struct Pet;
 
 #[derive(Component)]
 struct Chicken {
@@ -77,8 +81,6 @@ fn handle_input(
 
     transform.translation += movement.extend(0.);
 }
-
-const PICKUP_DISTANCE: f32 = 50. * 50.;
 
 fn player_pickups_eggs(
     mut commands: Commands,
@@ -131,6 +133,9 @@ fn chickens_lay_eggs(
 
 const MINIMAL_DISTANCE: f32 = 100. * 100.;
 const CHICKEN_SPEED: f32 = PLAYER_SPEED * 2.;
+const PICKUP_DISTANCE: f32 = 50. * 50.;
+const PET_DISTANCE: f32 = 120. * 120.;
+const PET_FOLLOW_SPEED: f32 = PLAYER_SPEED * 0.8;
 
 fn chicken_movement(
     mut chickens: Query<&mut Transform, (With<Chicken>, Without<Player>)>,
@@ -162,6 +167,25 @@ fn chicken_movement(
 
             chicken_transform.translation += dir_from_player * time.delta_seconds() * CHICKEN_SPEED;
         }
+    }
+}
+
+fn pet_movement(
+    mut pet: Query<&mut Transform, (With<Pet>, Without<Player>)>,
+    player: Query<&Transform, With<Player>>,
+    time: Res<Time>,
+) {
+    let mut pet_transform = pet.single_mut();
+    let player_transform = player.single();
+
+    let distance_to_player = pet_transform
+        .translation
+        .distance_squared(player_transform.translation);
+
+    if distance_to_player > PET_DISTANCE {
+        let dir_to_player = (player_transform.translation - pet_transform.translation).normalize();
+
+        pet_transform.translation += dir_to_player * time.delta_seconds() * PET_FOLLOW_SPEED;
     }
 }
 

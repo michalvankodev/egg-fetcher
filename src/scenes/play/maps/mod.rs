@@ -1,7 +1,7 @@
 use crate::game;
 use bevy::prelude::{Plugin as BevyPlugin, *};
 
-use super::{Chicken, GameplayObject, Player, CHICKEN_EGG_COOLDOWN};
+use super::{Chicken, GameplayObject, Pet, Player, CHICKEN_EGG_COOLDOWN};
 
 #[derive(Clone)]
 enum MapObject {
@@ -127,6 +127,20 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
             ..default()
         })
         .insert(Player)
+        .insert(GameplayObject);
+
+    // Spawn doggy
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: assets.load("sprites/Characters/Fox_Left.png"),
+            transform: Transform::from_translation(get_vector_for_tile(
+                map_def.player_spawn.0 + 1,
+                map_def.player_spawn.1 + 1,
+                1.,
+            )),
+            ..default()
+        })
+        .insert(Pet)
         .insert(GameplayObject);
 
     // Spawn chickens
