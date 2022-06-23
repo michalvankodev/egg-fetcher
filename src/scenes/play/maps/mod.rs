@@ -1,6 +1,8 @@
 use bevy::prelude::{Plugin as BevyPlugin, *};
 use crate::game;
 
+use super::{Player, GameplayObject, Chicken, CHICKEN_EGG_COOLDOWN};
+
 #[derive(Clone)]
 enum MapObject {
     Plain,
@@ -23,6 +25,10 @@ struct MapDefinition {
 *
  *
  */
+
+const TILE_WIDTH: usize = 128;
+const TILE_HEIGHT: usize = 64;
+
 impl MapDefinition {
     fn new() -> MapDefinition {
         let map_objects_row: Vec<MapObject> = vec![MapObject::Plain, MapObject::Plain, MapObject::Plain, MapObject::Plain, MapObject::Plain, MapObject::Plain, MapObject::Hole, MapObject::Plain, MapObject::Hole, MapObject::Plain, MapObject::Plain, MapObject::Plain];
@@ -46,24 +52,32 @@ impl BevyPlugin for Plugin {
     }
 }
 
+fn get_vector_for_tile(x: usize, y: usize, z: f32) -> Vec3 {
+    let multiplier = Vec3::new(TILE_WIDTH as f32, -(TILE_HEIGHT as f32), 1.);
+    let vector = Vec3::new(x as f32, y as f32, z);
+    return multiplier * vector;
+}
 
 
 fn setup(mut commands: Commands, assets: Res<AssetServer>) {
     let map_def = MapDefinition::new();
-
-    for square_point_x in 0..map_def.width {
-        for square_point_y in 0..map_def.height {
+    for tile_point_x in 0..map_def.width {
+        for tile_point_y in 0..map_def.height {
             commands.spawn_bundle(SpriteBundle {
                 texture: assets.load("sprites/Terrain_Flat/Grass_Dark.png"),
-                transform: Transform::from_translation(Vec3::new(square_point_x as f32 * 128., square_point_y as f32 * -64., 0.)),
+               transform: Transform::from_translation(get_vector_for_tile(tile_point_x, tile_point_y, 0.01)),
+                sprite: Sprite {
+                    anchor: bevy::sprite::Anchor::Center,
+                    ..default()
+                },
                 ..default()
             });
 
-            match map_def.map_objects[square_point_y as usize].get(square_point_x as usize) {
+            match map_def.map_objects[tile_point_y].get(tile_point_x) {
                 Some(MapObject::Hole) => {
                     commands.spawn_bundle(SpriteBundle {
                         texture: assets.load("sprites/Objects/Hole.png"),
-                        transform: Transform::from_translation(Vec3::new(square_point_x as f32 * 128., square_point_y as f32 * -64., 0.1)),
+                        transform: Transform::from_translation(get_vector_for_tile(tile_point_x, tile_point_y, 0.1)),
                         ..default()
                     });
                 }
@@ -71,6 +85,31 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
             }
         }
     }
+
+    // Spawn player
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: assets.load("player.png"),
+            transform: Transform::from_translation(get_vector_for_tile(map_def.player_spawn.0, map_def.player_spawn.1, 1.)),
+            ..default()
+        })
+        .insert(Player)
+        .insert(GameplayObject);
+
+    // Spawn chickens
+    for chicken_spawn in map_def.chicken_spawns {
+        commands
+            .spawn_bundle(SpriteBundle {
+                texture: assets.load("Chick_Down.png"),
+                transform: Transform::from_translation(get_vector_for_tile(chicken_spawn.0, chicken_spawn.1, 1.)),
+                ..default()
+            })
+            .insert(Chicken {
+                egg_timer: Timer::new(CHICKEN_EGG_COOLDOWN, true),
+            })
+            .insert(GameplayObject);
+    }
+    
 }
 
 

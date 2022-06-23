@@ -13,7 +13,9 @@ pub struct Plugin;
 
 impl BevyPlugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(game::State::Play).with_system(setup))
+        app
+            .add_plugin(maps::Plugin)
+            .add_system_set(SystemSet::on_enter(game::State::Play).with_system(setup))
             .add_system_set(
                 SystemSet::on_in_stack_update(game::State::Play)
                     .with_system(handle_input)
@@ -22,8 +24,7 @@ impl BevyPlugin for Plugin {
                     .with_system(despawn_timers)
                     .with_system(chicken_movement),
             )
-            .add_system_set(SystemSet::on_exit(game::State::Play).with_system(cleanup))
-            .add_plugin(maps::Plugin);
+            .add_system_set(SystemSet::on_exit(game::State::Play).with_system(cleanup));
     }
 }
 
@@ -46,31 +47,6 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
         .spawn_bundle(camera)
         .insert(MainCamera)
         .insert(GameplayObject);
-
-    commands
-        .spawn_bundle(SpriteBundle {
-            texture: assets.load("player.png"),
-            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
-            ..default()
-        })
-        .insert(Player)
-        .insert(GameplayObject);
-
-    for i in 0..=5 {
-        let dir = (TAU / 5.0) * i as f32;
-        let dir = Quat::from_rotation_z(dir - 1.0);
-
-        commands
-            .spawn_bundle(SpriteBundle {
-                texture: assets.load("Chick_Down.png"),
-                transform: Transform::from_translation(dir * Vec3::new(100.0, 0., 1.)),
-                ..default()
-            })
-            .insert(Chicken {
-                egg_timer: Timer::new(CHICKEN_EGG_COOLDOWN, true),
-            })
-            .insert(GameplayObject);
-    }
 }
 
 const PLAYER_SPEED: f32 = 350.;
