@@ -77,7 +77,9 @@ impl Action {
     pub fn spawn(self, parent: &mut ChildBuilder, marker: Marker) {
         parent
             .spawn_bundle(self.bundle)
-            .with_children(|parent| self.child.spawn(parent))
+            .with_children(|parent| {
+                self.child.spawn(parent);
+            })
             .insert(marker);
     }
 }

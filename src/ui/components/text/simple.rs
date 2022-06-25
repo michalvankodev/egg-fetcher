@@ -5,7 +5,7 @@ use crate::resources::prelude::Colors;
 use super::{BIG_SIZE, MEDIUM_SIZE, SMALL_SIZE, TEXT_ALIGNMENT};
 
 pub struct Simple {
-    bundle: TextBundle,
+    pub bundle: TextBundle,
 }
 
 impl Default for Simple {

@@ -62,6 +62,11 @@ impl Housing {
         self
     }
 
+    pub fn flex_direction(&mut self, flex_direction: FlexDirection) -> &mut Housing {
+        self.bundle.style.flex_direction = flex_direction;
+        self
+    }
+
     pub fn spawn(self, parent: &mut ChildBuilder, children: impl FnOnce(&mut ChildBuilder)) {
         parent.spawn_bundle(self.bundle).with_children(children);
     }

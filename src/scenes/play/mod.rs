@@ -1,23 +1,22 @@
 use std::time::Duration;
 
-use crate::game;
+use crate::{game, resources::prelude::Fonts};
 use bevy::prelude::{Plugin as BevyPlugin, *};
 use rand::Rng;
 
 mod maps;
+mod ui;
 
 // TODO Throw stick for dog
 // TODO Chicken should get stuck in the holes
 // TODO UI Display scores and objectives
-// TODO Map boundaries
-// TODO Spawn fence which will restrict movement of the player
+//
+#[derive(Default)]
+pub struct CollectedCoins(usize);
 
-#[derive(Component)]
-struct GameplayObject;
-
-#[derive(Component)]
-struct Collidable {
-    can_move: bool,
+#[derive(Default)]
+pub struct LevelTimer {
+    timer: Timer,
 }
 
 pub struct Plugin;
@@ -25,6 +24,7 @@ pub struct Plugin;
 impl BevyPlugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(maps::Plugin)
+            .insert_resource(CollectedCoins(0))
             .add_system_set(SystemSet::on_enter(game::State::Play).with_system(setup))
             .add_system_set(
                 SystemSet::on_in_stack_update(game::State::Play)
@@ -32,13 +32,24 @@ impl BevyPlugin for Plugin {
                     .with_system(chickens_lay_eggs)
                     .with_system(player_pickups_eggs)
                     .with_system(despawn_timers)
-                    //        .with_system(chicken_movement)
+                    //        .with_system(chicken_movement) // Has been substitued with collision
+                    //        system
                     .with_system(pet_movement)
                     .with_system(collision_system)
-                    .with_system(camera_follow_player),
+                    .with_system(camera_follow_player)
+                    .with_system(ui::update_score_system)
+                    .with_system(ui::update_time_system),
             )
             .add_system_set(SystemSet::on_exit(game::State::Play).with_system(cleanup));
     }
+}
+
+#[derive(Component)]
+struct GameplayObject;
+
+#[derive(Component)]
+struct Collidable {
+    can_move: bool,
 }
 
 #[derive(Component)]
@@ -55,6 +66,12 @@ struct Chicken {
     egg_timer: Timer,
 }
 
+#[derive(Component)]
+struct Egg;
+
+#[derive(Component)]
+struct Despawn(Timer);
+
 const CHICKEN_EGG_COOLDOWN: Duration = Duration::from_secs(10);
 const PLAYER_SPEED: f32 = 350.;
 const EGG_DESPAWN_TIMER: Duration = Duration::from_secs(5);
@@ -65,7 +82,11 @@ const PICKUP_DISTANCE: f32 = 50. * 50.;
 const PET_DISTANCE: f32 = 120. * 120.;
 const PET_FOLLOW_SPEED: f32 = PLAYER_SPEED * 0.8;
 
-fn setup(mut commands: Commands, assets: Res<AssetServer>) {
+fn setup(mut commands: Commands, fonts: Res<Fonts>) {
+    ui::spawn(&mut commands, &fonts);
+    commands.insert_resource(LevelTimer {
+        timer: Timer::new(Duration::from_secs(150), false),
+    });
     let camera = OrthographicCameraBundle::new_2d();
     commands
         .spawn_bundle(camera)
@@ -114,6 +135,7 @@ fn handle_input(
 
 fn player_pickups_eggs(
     mut commands: Commands,
+    mut collected_coins: ResMut<CollectedCoins>,
     player: Query<&Transform, With<Player>>,
     eggs: Query<(Entity, &Transform), With<Egg>>,
 ) {
@@ -126,12 +148,10 @@ fn player_pickups_eggs(
             < PICKUP_DISTANCE
         {
             commands.entity(egg_entity).despawn_recursive();
+            collected_coins.0 += 1;
         }
     }
 }
-
-#[derive(Component)]
-struct Egg;
 
 fn chickens_lay_eggs(
     mut commands: Commands,
@@ -222,9 +242,6 @@ fn pet_movement(
     }
 }
 
-#[derive(Component)]
-struct Despawn(Timer);
-
 fn despawn_timers(
     mut commands: Commands,
     mut timers: Query<(Entity, &mut Despawn)>,
@@ -232,7 +249,7 @@ fn despawn_timers(
 ) {
     for (entity, mut timer) in timers.iter_mut() {
         if timer.0.tick(time.delta()).just_finished() {
-            commands.entity(entity).despawn_recursive()
+            commands.entity(entity).despawn_recursive();
         }
     }
 }
@@ -267,8 +284,6 @@ fn collision_system(mut transforms: Query<(&mut Transform, &Collidable)>, time: 
                 - Vec3::new(c2_translation[0], c2_translation[1], 1.))
             .normalize();
             let c2_direction = -c1_direction;
-
-            println!("{} {}", c1_direction, c2_direction);
 
             if c1.1.can_move {
                 c1.0.translation += c1_direction * time.delta_seconds() * CHICKEN_SPEED;
