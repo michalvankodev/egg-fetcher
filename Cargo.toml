@@ -18,7 +18,7 @@ default = ['bevy/dynamic']
 [dependencies.bevy]
 version = "0.7.0"
 default-features = false
-features = ["bevy_gilrs", "bevy_winit", "render", "png", "hdr", "wayland", "filesystem_watcher"]
+features = ["bevy_gilrs", "bevy_winit", "render", "png", "hdr", "x11", "filesystem_watcher"]
 
 [dependencies.bevy_kira_audio]
 version = "0.9.0"

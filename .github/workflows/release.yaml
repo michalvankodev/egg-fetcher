@@ -9,7 +9,7 @@ on:
 
 env:
   # update with the name of the main binary
-  binary: rusty_jam_bevy_template
+  binary: egg_fetcher
 
 jobs:
   # Build for wasm
