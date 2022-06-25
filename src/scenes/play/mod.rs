@@ -15,6 +15,11 @@ mod maps;
 #[derive(Component)]
 struct GameplayObject;
 
+#[derive(Component)]
+struct Collidable {
+    can_move: bool,
+}
+
 pub struct Plugin;
 
 impl BevyPlugin for Plugin {
@@ -27,8 +32,9 @@ impl BevyPlugin for Plugin {
                     .with_system(chickens_lay_eggs)
                     .with_system(player_pickups_eggs)
                     .with_system(despawn_timers)
-                    .with_system(chicken_movement)
+                    //        .with_system(chicken_movement)
                     .with_system(pet_movement)
+                    .with_system(collision_system)
                     .with_system(camera_follow_player),
             )
             .add_system_set(SystemSet::on_exit(game::State::Play).with_system(cleanup));
@@ -50,6 +56,14 @@ struct Chicken {
 }
 
 const CHICKEN_EGG_COOLDOWN: Duration = Duration::from_secs(10);
+const PLAYER_SPEED: f32 = 350.;
+const EGG_DESPAWN_TIMER: Duration = Duration::from_secs(5);
+const MINIMAL_DISTANCE: f32 = 100. * 100.;
+const CHICKEN_SPEED: f32 = PLAYER_SPEED * 2.;
+const COLLISION_DISTANCE: f32 = 70. * 70.;
+const PICKUP_DISTANCE: f32 = 50. * 50.;
+const PET_DISTANCE: f32 = 120. * 120.;
+const PET_FOLLOW_SPEED: f32 = PLAYER_SPEED * 0.8;
 
 fn setup(mut commands: Commands, assets: Res<AssetServer>) {
     let camera = OrthographicCameraBundle::new_2d();
@@ -59,15 +73,13 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
         .insert(GameplayObject);
 }
 
-const PLAYER_SPEED: f32 = 350.;
-
 fn handle_input(
     keys: Res<Input<KeyCode>>,
     mut player: Query<&mut Transform, With<Player>>,
+    collidables: Query<(&mut Transform, &Collidable), Without<Player>>,
     time: Res<Time>,
 ) {
     let mut transform = player.single_mut();
-
     let mut movement = Vec2::splat(0.);
 
     if keys.pressed(KeyCode::Up) {
@@ -85,7 +97,19 @@ fn handle_input(
         movement.x += time.delta_seconds() * PLAYER_SPEED;
     }
 
-    transform.translation += movement.extend(0.);
+    let next_translation = transform.translation + movement.extend(0.);
+    let mut allow_move = true;
+    for object in collidables.iter() {
+        if !object.1.can_move
+            && object.0.translation.distance_squared(next_translation) < COLLISION_DISTANCE
+        {
+            allow_move = false;
+        }
+    }
+
+    if allow_move {
+        transform.translation = next_translation;
+    }
 }
 
 fn player_pickups_eggs(
@@ -105,8 +129,6 @@ fn player_pickups_eggs(
         }
     }
 }
-
-const EGG_DESPAWN_TIMER: Duration = Duration::from_secs(5);
 
 #[derive(Component)]
 struct Egg;
@@ -136,12 +158,6 @@ fn chickens_lay_eggs(
         }
     }
 }
-
-const MINIMAL_DISTANCE: f32 = 100. * 100.;
-const CHICKEN_SPEED: f32 = PLAYER_SPEED * 2.;
-const PICKUP_DISTANCE: f32 = 50. * 50.;
-const PET_DISTANCE: f32 = 120. * 120.;
-const PET_FOLLOW_SPEED: f32 = PLAYER_SPEED * 0.8;
 
 fn move_away_from_object(
     chicken_transform: &mut Mut<Transform>,
@@ -237,6 +253,31 @@ fn camera_follow_player(
         player_translation.y,
         camera_transform.translation.z,
     ));
+}
+
+fn collision_system(mut transforms: Query<(&mut Transform, &Collidable)>, time: Res<Time>) {
+    let mut collidables = transforms.iter_combinations_mut();
+    while let Some([mut c1, mut c2]) = collidables.fetch_next() {
+        let distance_in_between = c1.0.translation.distance_squared(c2.0.translation);
+
+        if distance_in_between < MINIMAL_DISTANCE {
+            let c1_translation = c1.0.translation.to_array();
+            let c2_translation = c2.0.translation.to_array();
+            let c1_direction = (Vec3::new(c1_translation[0], c1_translation[1], 1.)
+                - Vec3::new(c2_translation[0], c2_translation[1], 1.))
+            .normalize();
+            let c2_direction = -c1_direction;
+
+            println!("{} {}", c1_direction, c2_direction);
+
+            if c1.1.can_move {
+                c1.0.translation += c1_direction * time.delta_seconds() * CHICKEN_SPEED;
+            }
+            if c2.1.can_move {
+                c2.0.translation += c2_direction * time.delta_seconds() * CHICKEN_SPEED;
+            }
+        }
+    }
 }
 
 fn cleanup(mut commands: Commands, entities: Query<Entity, With<GameplayObject>>) {

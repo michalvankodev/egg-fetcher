@@ -4,7 +4,7 @@ use bevy::{
     sprite::Anchor,
 };
 
-use super::{Chicken, GameplayObject, Pet, Player, CHICKEN_EGG_COOLDOWN};
+use super::{Chicken, Collidable, GameplayObject, Pet, Player, CHICKEN_EGG_COOLDOWN};
 
 #[derive(Clone)]
 enum MapObject {
@@ -86,6 +86,25 @@ fn get_vector_for_tile(x: usize, y: usize, z: f32) -> Vec3 {
 
 const FENCE_Z_INDEX: f32 = 2.;
 
+fn create_fence_sprite_bundle(
+    commands: &mut Commands,
+    asset: Handle<Image>,
+    tile_point_x: usize,
+    tile_point_y: usize,
+) {
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: asset,
+            transform: Transform::from_translation(get_vector_for_tile(
+                tile_point_x,
+                tile_point_y,
+                FENCE_Z_INDEX,
+            )),
+            ..default()
+        })
+        .insert(Collidable { can_move: false });
+}
+
 fn spawn_border_fences(
     commands: &mut Commands,
     assets: &Res<AssetServer>,
@@ -94,65 +113,47 @@ fn spawn_border_fences(
     map_def: &MapDefinition,
 ) {
     if tile_point_x == 0 && tile_point_y == 0 {
-        commands.spawn_bundle(SpriteBundle {
-            texture: assets.load("sprites/Fences/Fence_Corner_Bottom_Right.png"),
-            transform: Transform::from_translation(get_vector_for_tile(
-                tile_point_x,
-                tile_point_y,
-                FENCE_Z_INDEX,
-            )),
-            ..default()
-        });
+        create_fence_sprite_bundle(
+            commands,
+            assets.load("sprites/Fences/Fence_Corner_Bottom_Right.png"),
+            tile_point_x,
+            tile_point_y,
+        );
     } else if tile_point_x == 0 && tile_point_y == map_def.height - 1 {
-        commands.spawn_bundle(SpriteBundle {
-            texture: assets.load("sprites/Fences/Fence_Corner_Top_Right.png"),
-            transform: Transform::from_translation(get_vector_for_tile(
-                tile_point_x,
-                tile_point_y,
-                FENCE_Z_INDEX,
-            )),
-            ..default()
-        });
+        create_fence_sprite_bundle(
+            commands,
+            assets.load("sprites/Fences/Fence_Corner_Top_Right.png"),
+            tile_point_x,
+            tile_point_y,
+        );
     } else if tile_point_y == 0 && tile_point_x == map_def.width - 1 {
-        commands.spawn_bundle(SpriteBundle {
-            texture: assets.load("sprites/Fences/Fence_Corner_Bottom_Left.png"),
-            transform: Transform::from_translation(get_vector_for_tile(
-                tile_point_x,
-                tile_point_y,
-                FENCE_Z_INDEX,
-            )),
-            ..default()
-        });
+        create_fence_sprite_bundle(
+            commands,
+            assets.load("sprites/Fences/Fence_Corner_Bottom_Left.png"),
+            tile_point_x,
+            tile_point_y,
+        );
     } else if tile_point_y == map_def.height - 1 && tile_point_x == map_def.width - 1 {
-        commands.spawn_bundle(SpriteBundle {
-            texture: assets.load("sprites/Fences/Fence_Corner_Top_Left.png"),
-            transform: Transform::from_translation(get_vector_for_tile(
-                tile_point_x,
-                tile_point_y,
-                FENCE_Z_INDEX,
-            )),
-            ..default()
-        });
+        create_fence_sprite_bundle(
+            commands,
+            assets.load("sprites/Fences/Fence_Corner_Top_Left.png"),
+            tile_point_x,
+            tile_point_y,
+        );
     } else if tile_point_x == 0 || tile_point_x == map_def.width - 1 {
-        commands.spawn_bundle(SpriteBundle {
-            texture: assets.load("sprites/Fences/Fence_Vertical.png"),
-            transform: Transform::from_translation(get_vector_for_tile(
-                tile_point_x,
-                tile_point_y,
-                FENCE_Z_INDEX,
-            )),
-            ..default()
-        });
+        create_fence_sprite_bundle(
+            commands,
+            assets.load("sprites/Fences/Fence_Vertical.png"),
+            tile_point_x,
+            tile_point_y,
+        );
     } else if tile_point_y == 0 || tile_point_y == map_def.height - 1 {
-        commands.spawn_bundle(SpriteBundle {
-            texture: assets.load("sprites/Fences/Fence_Horizontal.png"),
-            transform: Transform::from_translation(get_vector_for_tile(
-                tile_point_x,
-                tile_point_y,
-                FENCE_Z_INDEX,
-            )),
-            ..default()
-        });
+        create_fence_sprite_bundle(
+            commands,
+            assets.load("sprites/Fences/Fence_Horizontal.png"),
+            tile_point_x,
+            tile_point_y,
+        );
     }
 }
 
@@ -206,6 +207,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
             ..default()
         })
         .insert(Player)
+        .insert(Collidable { can_move: false })
         .insert(GameplayObject);
 
     // Spawn doggy
@@ -220,6 +222,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
             ..default()
         })
         .insert(Pet)
+        .insert(Collidable { can_move: true })
         .insert(GameplayObject);
 
     // Spawn chickens
@@ -237,6 +240,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
             .insert(Chicken {
                 egg_timer: Timer::new(CHICKEN_EGG_COOLDOWN, true),
             })
+            .insert(Collidable { can_move: true })
             .insert(GameplayObject);
     }
 }
