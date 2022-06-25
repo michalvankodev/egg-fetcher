@@ -84,6 +84,78 @@ fn get_vector_for_tile(x: usize, y: usize, z: f32) -> Vec3 {
     return multiplier * vector;
 }
 
+const FENCE_Z_INDEX: f32 = 2.;
+
+fn spawn_border_fences(
+    commands: &mut Commands,
+    assets: &Res<AssetServer>,
+    tile_point_x: usize,
+    tile_point_y: usize,
+    map_def: &MapDefinition,
+) {
+    if tile_point_x == 0 && tile_point_y == 0 {
+        commands.spawn_bundle(SpriteBundle {
+            texture: assets.load("sprites/Fences/Fence_Corner_Bottom_Right.png"),
+            transform: Transform::from_translation(get_vector_for_tile(
+                tile_point_x,
+                tile_point_y,
+                FENCE_Z_INDEX,
+            )),
+            ..default()
+        });
+    } else if tile_point_x == 0 && tile_point_y == map_def.height - 1 {
+        commands.spawn_bundle(SpriteBundle {
+            texture: assets.load("sprites/Fences/Fence_Corner_Top_Right.png"),
+            transform: Transform::from_translation(get_vector_for_tile(
+                tile_point_x,
+                tile_point_y,
+                FENCE_Z_INDEX,
+            )),
+            ..default()
+        });
+    } else if tile_point_y == 0 && tile_point_x == map_def.width - 1 {
+        commands.spawn_bundle(SpriteBundle {
+            texture: assets.load("sprites/Fences/Fence_Corner_Bottom_Left.png"),
+            transform: Transform::from_translation(get_vector_for_tile(
+                tile_point_x,
+                tile_point_y,
+                FENCE_Z_INDEX,
+            )),
+            ..default()
+        });
+    } else if tile_point_y == map_def.height - 1 && tile_point_x == map_def.width - 1 {
+        commands.spawn_bundle(SpriteBundle {
+            texture: assets.load("sprites/Fences/Fence_Corner_Top_Left.png"),
+            transform: Transform::from_translation(get_vector_for_tile(
+                tile_point_x,
+                tile_point_y,
+                FENCE_Z_INDEX,
+            )),
+            ..default()
+        });
+    } else if tile_point_x == 0 || tile_point_x == map_def.width - 1 {
+        commands.spawn_bundle(SpriteBundle {
+            texture: assets.load("sprites/Fences/Fence_Vertical.png"),
+            transform: Transform::from_translation(get_vector_for_tile(
+                tile_point_x,
+                tile_point_y,
+                FENCE_Z_INDEX,
+            )),
+            ..default()
+        });
+    } else if tile_point_y == 0 || tile_point_y == map_def.height - 1 {
+        commands.spawn_bundle(SpriteBundle {
+            texture: assets.load("sprites/Fences/Fence_Horizontal.png"),
+            transform: Transform::from_translation(get_vector_for_tile(
+                tile_point_x,
+                tile_point_y,
+                FENCE_Z_INDEX,
+            )),
+            ..default()
+        });
+    }
+}
+
 fn setup(mut commands: Commands, assets: Res<AssetServer>) {
     let map_def = MapDefinition::new();
     for tile_point_x in 0..map_def.width {
@@ -103,67 +175,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
             });
 
             // Spawn map borders
-            if tile_point_x == 0 && tile_point_y == 0 {
-                commands.spawn_bundle(SpriteBundle {
-                    texture: assets.load("sprites/Fences/Fence_Corner_Bottom_Right.png"),
-                    transform: Transform::from_translation(get_vector_for_tile(
-                        tile_point_x,
-                        tile_point_y,
-                        2.,
-                    )),
-                    ..default()
-                });
-            } else if tile_point_x == 0 && tile_point_y == map_def.height - 1 {
-                commands.spawn_bundle(SpriteBundle {
-                    texture: assets.load("sprites/Fences/Fence_Corner_Top_Right.png"),
-                    transform: Transform::from_translation(get_vector_for_tile(
-                        tile_point_x,
-                        tile_point_y,
-                        2.,
-                    )),
-                    ..default()
-                });
-            } else if tile_point_y == 0 && tile_point_x == map_def.width - 1 {
-                commands.spawn_bundle(SpriteBundle {
-                    texture: assets.load("sprites/Fences/Fence_Corner_Bottom_Left.png"),
-                    transform: Transform::from_translation(get_vector_for_tile(
-                        tile_point_x,
-                        tile_point_y,
-                        2.,
-                    )),
-                    ..default()
-                });
-            } else if tile_point_y == map_def.height - 1 && tile_point_x == map_def.width - 1 {
-                commands.spawn_bundle(SpriteBundle {
-                    texture: assets.load("sprites/Fences/Fence_Corner_Top_Left.png"),
-                    transform: Transform::from_translation(get_vector_for_tile(
-                        tile_point_x,
-                        tile_point_y,
-                        2.,
-                    )),
-                    ..default()
-                });
-            } else if tile_point_x == 0 || tile_point_x == map_def.width - 1 {
-                commands.spawn_bundle(SpriteBundle {
-                    texture: assets.load("sprites/Fences/Fence_Vertical.png"),
-                    transform: Transform::from_translation(get_vector_for_tile(
-                        tile_point_x,
-                        tile_point_y,
-                        2.,
-                    )),
-                    ..default()
-                });
-            } else if tile_point_y == 0 || tile_point_y == map_def.height - 1 {
-                commands.spawn_bundle(SpriteBundle {
-                    texture: assets.load("sprites/Fences/Fence_Horizontal.png"),
-                    transform: Transform::from_translation(get_vector_for_tile(
-                        tile_point_x,
-                        tile_point_y,
-                        2.,
-                    )),
-                    ..default()
-                });
-            }
+            spawn_border_fences(&mut commands, &assets, tile_point_x, tile_point_y, &map_def);
 
             match map_def.map_objects[tile_point_y].get(tile_point_x) {
                 Some(MapObject::Hole) => {
