@@ -137,9 +137,26 @@ const PICKUP_DISTANCE: f32 = 50. * 50.;
 const PET_DISTANCE: f32 = 120. * 120.;
 const PET_FOLLOW_SPEED: f32 = PLAYER_SPEED * 0.8;
 
+fn move_away_from_object(
+    chicken_transform: &mut Mut<Transform>,
+    object: &Transform,
+    time: &Res<Time>,
+) {
+    let distance_to_object = chicken_transform
+        .translation
+        .distance_squared(object.translation);
+
+    if distance_to_object < MINIMAL_DISTANCE {
+        let dir_from_player = (chicken_transform.translation - object.translation).normalize();
+
+        chicken_transform.translation += dir_from_player * time.delta_seconds() * CHICKEN_SPEED;
+    }
+}
+
 fn chicken_movement(
     mut chickens: Query<&mut Transform, (With<Chicken>, Without<Player>)>,
-    player: Query<&Transform, With<Player>>,
+    player: Query<&Transform, (With<Player>, Without<Chicken>)>,
+    pet: Query<&Transform, (With<Pet>, Without<Chicken>)>,
     time: Res<Time>,
 ) {
     let mut chicken_combinations = chickens.iter_combinations_mut();
@@ -156,17 +173,11 @@ fn chicken_movement(
     }
 
     let player_transform = player.single();
+    let pet_transform = pet.single();
+
     for mut chicken_transform in chickens.iter_mut() {
-        let distance_to_player = chicken_transform
-            .translation
-            .distance_squared(player_transform.translation);
-
-        if distance_to_player < MINIMAL_DISTANCE {
-            let dir_from_player =
-                (chicken_transform.translation - player_transform.translation).normalize();
-
-            chicken_transform.translation += dir_from_player * time.delta_seconds() * CHICKEN_SPEED;
-        }
+        move_away_from_object(&mut chicken_transform, player_transform, &time);
+        move_away_from_object(&mut chicken_transform, pet_transform, &time);
     }
 }
 
