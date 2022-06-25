@@ -1,5 +1,8 @@
 use crate::game;
-use bevy::prelude::{Plugin as BevyPlugin, *};
+use bevy::{
+    prelude::{Plugin as BevyPlugin, *},
+    sprite::Anchor,
+};
 
 use super::{Chicken, GameplayObject, Pet, Player, CHICKEN_EGG_COOLDOWN};
 
@@ -7,6 +10,7 @@ use super::{Chicken, GameplayObject, Pet, Player, CHICKEN_EGG_COOLDOWN};
 enum MapObject {
     Plain,
     Hole,
+    Fence,
 }
 
 #[derive(Clone)]
@@ -19,10 +23,10 @@ struct MapDefinition {
 }
 
 /**
- * Square system
-* 1 square has widht 128px and height of 64px (there is a left over of 32px of "ground" on the
-*   sprite)
-*
+ * Tile system
+ * 1 tile has widht 128px and height f 64px (there is a left over of 32px of "ground" on the
+ *   sprite)
+ *
  *
  */
 
@@ -35,7 +39,7 @@ impl MapDefinition {
             MapObject::Plain,
             MapObject::Plain,
             MapObject::Plain,
-            MapObject::Plain,
+            MapObject::Hole,
             MapObject::Plain,
             MapObject::Plain,
             MapObject::Hole,
@@ -49,8 +53,8 @@ impl MapDefinition {
         MapDefinition {
             width: 12,
             height: 8,
-            player_spawn: (1, 1),
-            chicken_spawns: vec![(0, 0), (0, 1), (3, 3), (4, 4), (5, 5)],
+            player_spawn: (4, 3),
+            chicken_spawns: vec![(3, 2), (2, 2), (3, 3), (4, 4), (5, 5)],
             map_objects: vec![
                 map_objects_row.clone(),
                 map_objects_row.clone(),
@@ -97,6 +101,69 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
                 },
                 ..default()
             });
+
+            // Spawn map borders
+            if tile_point_x == 0 && tile_point_y == 0 {
+                commands.spawn_bundle(SpriteBundle {
+                    texture: assets.load("sprites/Fences/Fence_Corner_Bottom_Right.png"),
+                    transform: Transform::from_translation(get_vector_for_tile(
+                        tile_point_x,
+                        tile_point_y,
+                        2.,
+                    )),
+                    ..default()
+                });
+            } else if tile_point_x == 0 && tile_point_y == map_def.height - 1 {
+                commands.spawn_bundle(SpriteBundle {
+                    texture: assets.load("sprites/Fences/Fence_Corner_Top_Right.png"),
+                    transform: Transform::from_translation(get_vector_for_tile(
+                        tile_point_x,
+                        tile_point_y,
+                        2.,
+                    )),
+                    ..default()
+                });
+            } else if tile_point_y == 0 && tile_point_x == map_def.width - 1 {
+                commands.spawn_bundle(SpriteBundle {
+                    texture: assets.load("sprites/Fences/Fence_Corner_Bottom_Left.png"),
+                    transform: Transform::from_translation(get_vector_for_tile(
+                        tile_point_x,
+                        tile_point_y,
+                        2.,
+                    )),
+                    ..default()
+                });
+            } else if tile_point_y == map_def.height - 1 && tile_point_x == map_def.width - 1 {
+                commands.spawn_bundle(SpriteBundle {
+                    texture: assets.load("sprites/Fences/Fence_Corner_Top_Left.png"),
+                    transform: Transform::from_translation(get_vector_for_tile(
+                        tile_point_x,
+                        tile_point_y,
+                        2.,
+                    )),
+                    ..default()
+                });
+            } else if tile_point_x == 0 || tile_point_x == map_def.width - 1 {
+                commands.spawn_bundle(SpriteBundle {
+                    texture: assets.load("sprites/Fences/Fence_Vertical.png"),
+                    transform: Transform::from_translation(get_vector_for_tile(
+                        tile_point_x,
+                        tile_point_y,
+                        2.,
+                    )),
+                    ..default()
+                });
+            } else if tile_point_y == 0 || tile_point_y == map_def.height - 1 {
+                commands.spawn_bundle(SpriteBundle {
+                    texture: assets.load("sprites/Fences/Fence_Horizontal.png"),
+                    transform: Transform::from_translation(get_vector_for_tile(
+                        tile_point_x,
+                        tile_point_y,
+                        2.,
+                    )),
+                    ..default()
+                });
+            }
 
             match map_def.map_objects[tile_point_y].get(tile_point_x) {
                 Some(MapObject::Hole) => {

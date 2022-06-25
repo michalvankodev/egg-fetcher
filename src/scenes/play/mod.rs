@@ -6,6 +6,12 @@ use rand::Rng;
 
 mod maps;
 
+// TODO Throw stick for dog
+// TODO Chicken should get stuck in the holes
+// TODO UI Display scores and objectives
+// TODO Map boundaries
+// TODO Spawn fence which will restrict movement of the player
+
 #[derive(Component)]
 struct GameplayObject;
 
